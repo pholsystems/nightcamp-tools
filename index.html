@@ -380,6 +380,8 @@ function renderSys() {
 const SECS = [&#x27;start&#x27;, &#x27;level&#x27;, &#x27;jobs&#x27;, &#x27;sys&#x27;];
 const io = new IntersectionObserver((es) =&gt; { for (const e of es) if (e.isIntersecting) for (const a of document.querySelectorAll(&#x27;nav.ch a&#x27;)) a.setAttribute(&#x27;aria-current&#x27;, a.dataset.sec === e.target.id); }, { rootMargin: &#x27;-45% 0px -50% 0px&#x27; });
 for (const s of SECS) io.observe(document.getElementById(s));
+// in-page jumps: scroll here (inside the Tools page a &quot;#x&quot; link would load the whole page into this frame)
+for (const a of document.querySelectorAll(&#x27;nav.ch a&#x27;)) a.addEventListener(&#x27;click&#x27;, (e) =&gt; { e.preventDefault(); document.getElementById(a.dataset.sec).scrollIntoView({ behavior: &#x27;smooth&#x27;, block: &#x27;start&#x27; }); });
 const jobOpts = G.jobs.slice().sort((a, b) =&gt; a.t - b.t).map((j) =&gt; `&lt;option value=&quot;${j.id}&quot;&gt;${esc(j.n)} · ${esc(EN[j.id] || &#x27;&#x27;)}&lt;/option&gt;`).join(&#x27;&#x27;);
 $(&#x27;#meJob&#x27;).innerHTML = jobOpts;
 $(&#x27;#meJob&#x27;).onchange = (e) =&gt; setProfile(e.target.value, P.lv);

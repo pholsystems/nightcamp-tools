@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="th">
-<head>
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>NightCamp Tools</title>
@@ -60,9 +60,9 @@ html,body{overflow-x:hidden}
     <button id="langBtn" class="lang" aria-label="ภาษา / Language">EN</button>
   </div>
 </header>
-<iframe id="f-guide" title="คู่มือ" data-src="guide.html?v=bdc624ad"></iframe>
-<iframe id="f-equip" title="คลังอุปกรณ์" data-src="equip.html?v=b786a911" hidden></iframe>
-<iframe id="f-sim" title="Build Simulator" data-src="sim.html?v=0a3d2c56" hidden></iframe>
+<iframe id="f-guide" title="คู่มือ" data-src="guide.html?v=2a44a6c2"></iframe>
+<iframe id="f-equip" title="คลังอุปกรณ์" data-src="equip.html?v=2889fe5d" hidden></iframe>
+<iframe id="f-sim" title="Build Simulator" data-src="sim.html?v=5e7b1b83" hidden></iframe>
 <script>
 const TABS = ['guide', 'equip', 'sim'], F = Object.fromEntries(TABS.map((x) => [x, document.getElementById('f-' + x)]));
 const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };

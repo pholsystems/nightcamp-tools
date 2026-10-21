@@ -1,4 +1,4 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>[hidden]{display:none!important}</style></head><body><title>NightCamp Build Sim</title>
+<!doctype html><html lang="th"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>[hidden]{display:none!important}</style></head><body><title>NightCamp Build Sim</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -161,7 +161,7 @@ $('#buildTag').textContent = 'build ' + D.build; $('#buildFoot').textContent = D
 // ---------- build state ----------
 const blank = (job = 'rogue') => ({ job, jlv: 50, add: {}, order: [], base: 27, st: { str: 5, agi: 5, vit: 5, int: 5, dex: 5, luk: 5 }, w: { atk: 31, kind: 'melee' }, gear: {} });
 let B = { A: blank('rogue'), B: blank('rogue') }, cur = 'A', compare = false, picked = null;
-try { const s = JSON.parse(store.get('ncsim_state') || 'null'); if (s && s.A && s.B) B = s; } catch (e) {}
+try { const s = JSON.parse(store.get('ncsim_state') || 'null'); if (s && s.A && s.B) { B = s; for (const k of ['A', 'B']) B[k].gear = cleanGear(B[k].gear); } } catch (e) {}
 const persist = () => store.set('ncsim_state', JSON.stringify(B));
 const bld = () => B[cur];
 
@@ -397,16 +397,34 @@ function renderCompare() {
 }
 
 // ---------- gear from the Equipment tab ----------
+// share codes and messages are outside input: keep only known fields, numbers as numbers, text as text (drawn escaped)
+function _str(v, n = 80) { return typeof v === 'string' ? v.slice(0, n) : ''; }
+function _num(v, lo = -1e6, hi = 1e6) { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : 0; }
+function _st(o) { const r = {}; if (o && typeof o === 'object') for (const k of Object.keys(o)) if (/^[a-zA-Z]{1,12}$/.test(k)) r[k] = _num(o[k], -1000, 1000); return r; }
+function cleanGear(g) {
+  const out = {};
+  if (!g || typeof g !== 'object') return out;
+  if (g.weapon && typeof g.weapon === 'object') out.weapon = { id: _str(g.weapon.id, 40), n: _str(g.weapon.n), atk: _num(g.weapon.atk, 0, 9999), el: EL[g.weapon.el] ? g.weapon.el : 'neutral', ab: _str(g.weapon.ab, 200) };
+  if (g.set && typeof g.set === 'object') {
+    const P = {};
+    for (const k of ['top', 'pants', 'acc']) if (g.set.P && g.set.P[k]) P[k] = { n: _str(g.set.P[k].n), st: _st(g.set.P[k].st) };
+    out.set = { id: _str(g.set.id, 40), n: _str(g.set.n), P, b1: _st(g.set.b1), b2: _st(g.set.b2), fx: _str(g.set.fx, 300) };
+  }
+  for (const k of ['hat', 'glasses']) if (g[k] && typeof g[k] === 'object') out[k] = { id: _str(g[k].id, 40), n: _str(g[k].n), st: _st(g[k].st) };
+  if (g.setAcc === false) out.setAcc = false;
+  return out;
+}
 function applyGear(it) {
   if (!it || typeof it !== 'object' || typeof it.n !== 'string') return;
   const b = bld(); b.gear = b.gear || {};
-  if (it.slot === 'weapon') { b.gear.weapon = { id: it.id, n: it.n, atk: +it.atk || 0, el: it.el, ab: it.ab || '' }; b.w = { atk: +it.atk || 0, kind: it.kind === 'ranged' ? 'ranged' : 'melee' }; }
-  else if (it.slot === 'set' && it.P) { b.gear.set = { id: it.id, n: it.n, P: it.P, b1: it.b1 || {}, b2: it.b2 || {}, fx: it.fx || '' }; }
-  else if (it.slot === 'hat' || it.slot === 'glasses') b.gear[it.slot] = { id: it.id, n: it.n, st: it.st || {} };
+  if (it.slot === 'weapon') { b.gear.weapon = cleanGear({ weapon: it }).weapon; b.w = { atk: b.gear.weapon.atk, kind: it.kind === 'ranged' ? 'ranged' : 'melee' }; }
+  else if (it.slot === 'set' && it.P) { b.gear.set = cleanGear({ set: it }).set; }
+  else if (it.slot === 'hat' || it.slot === 'glasses') b.gear[it.slot] = cleanGear({ [it.slot]: it })[it.slot];
   else return;
   persist(); render(); toast(`ใส่ "${it.n}" ใน Build ${cur} แล้ว`);
 }
 window.addEventListener('message', (e) => {
+  if (e.source !== window.parent || (e.origin !== location.origin && e.origin !== 'null')) return; // (only the NightCamp Tools top bar)
   const d = e.data || {};
   if (d.nc === 'gear') applyGear(d.item);
   // a recommended build from the guide (or a #sim/NCB1. link): into an empty slot, else Build B, so Build A stays
@@ -434,7 +452,7 @@ function dec(code) {
   const b = blank(o.job); b.jlv = Math.max(1, Math.min(50, +o.jlv || 50)); b.base = Math.max(1, Math.min(99, +o.base || 1));
   for (const k of STATS) b.st[k] = Math.max(1, Math.min(99, +(o.st || {})[k] || 5));
   if (o.w) b.w = { atk: Math.max(0, +o.w.atk || 0), kind: o.w.kind === 'ranged' ? 'ranged' : 'melee' };
-  if (o.gear && typeof o.gear === 'object') b.gear = JSON.parse(JSON.stringify(o.gear));
+  if (o.gear && typeof o.gear === 'object') b.gear = cleanGear(o.gear);
   const okIds = new Set(listOf(b.job));
   for (const id of o.order || []) if (okIds.has(id) && !canRaise(b, id)) { b.add[id] = (b.add[id] || 0) + 1; b.order.push(id); }
   return b;

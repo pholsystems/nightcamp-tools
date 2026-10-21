@@ -1,4 +1,4 @@
-<!doctype html><html lang="th"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>[hidden]{display:none!important}</style></head><body><title>NightCamp Equipment</title>
+<!doctype html><html lang="th"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>[hidden]{display:none!important}</style></head><body><title>NightCamp Equipment</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mitr:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
 <style>
@@ -312,6 +312,8 @@ $('#ab').onchange = (e) => { F.ab = e.target.checked; run(); };
 $('#me').onchange = (e) => { F.me = e.target.value; run(); };
 $('#sort').onchange = (e) => { F.sort = e.target.value; run(); };
 window.addEventListener('message', (e) => {
+  if (e.source !== window.parent || (e.origin !== location.origin && e.origin !== 'null')) return; // (only the NightCamp Tools top bar)
+ 
   const d = e.data || {};
   if (d.nc === 'profile' && d.profile) { if (E.jobs[d.profile.job]) F.job = E.jobs[d.profile.job][3] <= 2 ? d.profile.job : E.jobs[d.profile.job][2]; F.me = String(d.profile.lv || ''); syncUi(); run(); }
 });
